@@ -22,19 +22,30 @@ from typing import Optional
 
 
 def conv3x3(in_planes: int, out_planes: int, stride=1, groups: int = 1, dilation: Union[int, Tuple[int, int]] = 1):
-    """
+    """    
+    
+    PROBLEM WITH A CONVOLUTIONAL LAYER:
+    1. the kernel multiplies centrally situated pixels more often than pixels at the ends. Pixels at the ends are only scanned by the end of a filter
+    2.dimensions of the outputs of this layer may still be too big
+    HOW TO TACKLE: 
+    1. artificially stack pixels to the left and the right of an image (padding)
+    2. move kernel at every iteration more than one pixel, i.e. increase the stride from 1 to a higher value (stride)
+    
+    INPUT: RGB image (n_channels x n_horizontal_pixels x n_vertical pixels 
+    OUTPUT: one RGB image for every kernel (n_kernels x n_channels x n_convolutions x n_convolutions)   (while the output image is smaller than the input)
+    
     CREDITS: https://github.com/pytorch/vision
     3x3 convolution with padding
     """
     return torch.nn.Conv2d(
-        in_channels=in_planes,
-        out_channels=out_planes,
-        kernel_size=3,
-        stride=stride,
-        padding=dilation,
-        groups=groups,
-        bias=False,
-        dilation=dilation
+        in_channels=in_planes,  #RGB has 3 channels, grayscale has 1 channel
+        out_channels=out_planes, #number of kernels (dog detector, cat detector, car detector, ...), i.e. number of feature maps
+        kernel_size=3,   #in_channelsx3x3 for every kernel, also called filter. 3x3 kernel times 3, as we have 3 channels (RGB)
+        stride=stride,  
+        padding=dilation, 
+        groups=groups, # split of a filter into smaller filters and concatenate their results (https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html)
+        bias=False, # does not add a bias to the multiplication of kernel's weight and the redscale value (same for yellow scale and blue scale)
+        dilation=dilation # spacing between each point of the kernel (https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md)
     )
 
 
@@ -56,6 +67,8 @@ class BasicBlock(torch.nn.Module):
 
     """
     CREDITS: https://github.com/pytorch/vision
+    
+    torch.nn.Module: Base class for all neural network modules
     """
 
     expansion: int = 1
@@ -73,14 +86,14 @@ class BasicBlock(torch.nn.Module):
         super(BasicBlock, self).__init__()
 
         if norm_layer is None:
-            norm_layer = torch.nn.BatchNorm2d
+            norm_layer = torch.nn.BatchNorm2d # take every input value, subtract their mean and divide by standard deviation, then apply activation function
         if groups != 1 or base_width != 64:
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
 
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.conv1 = conv3x3(inplanes, planes, stride) 
         self.bn1 = norm_layer(planes)
         self.relu = torch.nn.ReLU()
         self.conv2 = conv3x3(planes, planes)
