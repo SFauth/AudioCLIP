@@ -31,7 +31,19 @@ class Attention2d(torch.nn.Module):
         self.activation = torch.nn.Sigmoid()
 
     def forward(self, x: torch.Tensor, size: torch.Size) -> torch.Tensor:
-        x = F.adaptive_max_pool2d(x, size)
+        r"""
+        MaxPool2d:
+        - max pooling takes a range of convolutional layer's outputs and selects their maximum and outputs
+          an output_dim x output_dim array, based on size and stride
+        - it is basically also a kernel of selected size sliding over the image with a certain stride
+        - yet, it does not apply a linear combination to its inputs (the conv layer's output)
+        - it just applies the max function, selecting the maximum of its inputs
+        AdaptiveMaxPool2d:
+        - we don't specify the kernel size and stride. These are derived by the computer
+        - we only define our desired dimensions of the output array (output_dim x output_dim)
+        """
+        
+        x = F.adaptive_max_pool2d(x, size)                                    
         x = self.conv_depth(x)
         x = self.conv_point(x)
         x = self.bn(x)

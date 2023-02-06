@@ -124,6 +124,9 @@ class Bottleneck(torch.nn.Module):
 
     """
     CREDITS: https://github.com/pytorch/vision
+    What is a bottleneck?
+    A bottleneck's purpose is to change the input's dimensionality. 
+    It is usually 1 layer of lower dimensionality than its input. 
     """
 
     expansion: int = 4
@@ -182,6 +185,12 @@ class ResNetWithAttention(it.AbstractNet):
 
     """
     CREDITS: https://github.com/pytorch/vision
+    
+    What is ResNet?
+    Predict the residual of a block of layers output to the block of layer's input.
+    This avoids the vanishing gradient problem
+    What is batch normalization?
+    Take the distribution of a whole batch of samples and standardize them 
     """
 
     def __init__(self,
