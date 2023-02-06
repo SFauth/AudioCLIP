@@ -58,13 +58,29 @@ def tqdm_stdout(orig_stdout: Optional[io.TextIOBase] = None):
 
 
 def load_class(package_name: str, class_name: Optional[str] = None) -> Type:
+    
     if class_name is None:
         package_name, class_name = package_name.rsplit('.', 1)
+    """
+    "utils.transforms.RandomNoise" -> ["utils.transforms", "RandomNoise"]
+    """
 
     importlib.invalidate_caches()
+    """
+    make module (utils/transforms.py) noticeable
+    """
 
     package = importlib.import_module(package_name)
+
+    """
+    import utils/transforms.py 
+    """
+
     cls = getattr(package, class_name)
+
+    """
+    import class RandomNoise from utils/transforms.py
+    """
 
     return cls
 

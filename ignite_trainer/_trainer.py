@@ -81,12 +81,27 @@ def run(experiment_name: str,
         transforms_train = list()
         transforms_test = list()
 
+        # transforms: config["Transforms"]
+        # list of dicts, where each dict contains the name of a class
+        # from the script utils.transforms and corresponding arguments of the class
+
         for idx, transform in enumerate(transforms):
+            """
+            go in every class of transforms. 
+            if class is used in test, train is false. 
+            if train is false use_test gets a True, i.e. it is used in testing
+            """
             use_train = transform.get('train', True)
             use_test = transform.get('test', True)
 
+            """
+            loads the current iteration's class
+            """
             transform = _utils.load_class(transform['class'])(**transform['args'])
-
+            """
+            if use_test is true (as above), the class is ONLY used in test
+            and thus gets appended to the list of classes
+            """
             if use_train:
                 transforms_train.append(transform)
             if use_test:
@@ -94,7 +109,15 @@ def run(experiment_name: str,
 
             transforms[idx]['train'] = use_train
             transforms[idx]['test'] = use_test
-
+            """
+            as visible in the audioclip-us8k.json, a dict entry train is generated
+            if the class is used in train, i.e. test
+            if used ONLY in train: "test": false
+            """
+        
+        """
+        combines all transforms classes to one object
+        """
         transforms_train = tv.transforms.Compose(transforms_train)
         transforms_test = tv.transforms.Compose(transforms_test)
 
@@ -111,6 +134,9 @@ def run(experiment_name: str,
             transforms_test
         )
 
+        """
+        Defines model class and its arguments (path and multilabel)
+        """
         Network: Type = _utils.load_class(model_class)
         model: _interfaces.AbstractNet = Network(**model_args)
 
@@ -572,6 +598,7 @@ def main():
         parser.add_argument('-R', '--random-seed', type=int, required=False)
         parser.add_argument('-s', '--suffix', type=str, required=False)
         parser.add_argument('-S', '--skip-train-val', action='store_true', default=False)
+        #parser.add_argument('-T', '--select-target', type=int, required=True)
 
         args, unknown_args = parser.parse_known_args()
 
